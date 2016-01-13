@@ -1,0 +1,40 @@
+<%#
+kind: ptable
+name: Kickstart default
+oses:
+- CentOS 5
+- CentOS 6
+- CentOS 7
+- Fedora 16
+- Fedora 17
+- Fedora 18
+- Fedora 19
+- Fedora 20
+- RedHat 5
+- RedHat 6
+- RedHat 7
+%>
+zerombr
+<% if @host.provider == 'BareMetal' -%>
+clearpart --linux --drives=sda 
+<% else -%>
+clearpart --linux --drives=vda
+<% end -%>
+#autopart --type=lvm --fstype=ext4 
+
+<% if @host.provider == 'BareMetal' -%>
+part /boot --fstype ext3 --size=1024 --ondrive=sda
+part pv.01 --size=1 --grow --ondrive=sda
+<% else -%>
+part /boot --fstype ext3 --size=1024 --ondrive=vda
+part pv.01 --size=1 --grow --ondrive=vda
+<% end -%>
+
+volgroup vg1 pv.01
+logvol  /  --vgname=vg1  --size=4096  --name=root --fstype=ext4 --grow --maxsize=18000
+logvol  /var  --vgname=vg1  --size=1024  --name=var --fstype=ext4 --grow --maxsize=8192
+logvol  /tmp  --vgname=vg1  --size=1024  --name=tmp --fstype=ext4 --grow --maxsize=4096
+logvol  /home  --vgname=vg1  --size=1024  --grow  --name=home --fstype=ext4 --maxsize=15000
+logvol /var/log/audit --vgname=vg1 --size=512 --grow --name=audit --fstype=ext4 --maxsize=4096
+logvol /var/log --vgname=vg1 --size=512 --grow --name=varlog --fstype=ext4 --maxsize=4096
+logvol swap --recommended --fstype swap --name=swaplv --vgname=vg1
